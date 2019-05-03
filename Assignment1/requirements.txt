@@ -1,0 +1,2 @@
+The following python libraries are needed:
+numpy , scipy, open3d, tqdm, re, os
