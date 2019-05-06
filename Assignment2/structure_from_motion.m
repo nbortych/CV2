@@ -40,7 +40,7 @@ function [overall_points] = structure_from_motion(pv_matrix, block_size)
             
             % In case no points collected so far 
             if sum(overall_def_idx)==0
-                overall_points(new_idx,:) = S';
+                overall_points(def_idx,:) = S';
 
             % Otherwise:
             % Stitch current point set to main view using point correspondence
