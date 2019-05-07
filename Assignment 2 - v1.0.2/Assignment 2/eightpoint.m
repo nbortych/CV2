@@ -13,7 +13,10 @@ matches = keypoint_matching(im1, im2);
 %    F = T2 * F * T1;
 %end
 
-F = fundamentalMatrixRANSAC(matches, 0.00001);
+[all_inliers, count] = allInliers(matches, 0.00001);
+what = matches(:, all_inliers);
+
+%F = fundamentalMatrixRANSAC(matches, 0.00001);
 
 function F = fundamentalMatrix(matches)
     x1 = matches(1,:)';
@@ -55,6 +58,24 @@ function F = fundamentalMatrixRANSAC(matches, threshold)
     end
     
     F = fundamentalMatrix(matches(:, maxInliers));
+end
+
+function [maxInliers, maxCount] = allInliers(matches, threshold)
+    maxCount = 0;
+    maxInliers = true(1, size(matches,2));
+
+    for i =1:100
+        F = fundamentalMatrix(matches);
+
+        di = sampson_distance(matches, F);
+        inliers = di <= threshold;
+        count = sum(inliers);
+        
+        if count > maxCount
+            maxCount = count;
+            maxInliers = inliers;
+        end
+    end
 end
 
 function [normalized_points, T1, T2] = normalize_points(matches)
