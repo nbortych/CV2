@@ -2,17 +2,19 @@
 point_view_matrix = dlmread('PointViewMatrix.txt');
 % Number of rows 
 size(point_view_matrix);
-
+addpath('./RANSAC')
 point_view_generated = [];
-threshold = 1;
+threshold = 1.3;
 tol =  0.000000000000001; % A very small value.
 %for each pair of matches
 
 for i=1:size(keypoint_matches)
    %load the match
    keypoint_match = cell2mat(keypoint_matches(i));
+   %[matches, T1, T2] = normalize_points(keypoint_match);
+   %[F , inliers] = fundamentalMatrixRANSACinliers(matches, 0.00001);
+   %keypoint_match = keypoint_match(:, inliers);
    
-
    %for each match
    for point=1:size(keypoint_match,2)
         x1 = keypoint_match(1,point);
