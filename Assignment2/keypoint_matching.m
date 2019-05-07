@@ -1,6 +1,6 @@
-function keypoint_matches = keypoint_matching(im1, im2)
-    [f1,d1] = vl_sift(im1);
-    [f2,d2] = vl_sift(im2);
+function keypoint_matches = keypoint_matching(im1, im2, peak_thresh)
+    [f1,d1] = vl_sift(im1, 'PeakThresh', peak_thresh);
+    [f2,d2] = vl_sift(im2, 'PeakThresh', peak_thresh);
     [matches, scores] = vl_ubcmatch(d1, d2);
     
     matches1 = f1(1:2,matches(1,:));

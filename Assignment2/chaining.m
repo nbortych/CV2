@@ -4,19 +4,26 @@ point_view_matrix = dlmread('PointViewMatrix.txt');
 size(point_view_matrix);
 
 point_view_generated = [];
-
-tol =  0.01; % A very small value.
+threshold = 1;
+tol =  0.000000000000001; % A very small value.
 %for each pair of matches
 
 for i=1:size(keypoint_matches)
    %load the match
    keypoint_match = cell2mat(keypoint_matches(i));
+   
+
    %for each match
    for point=1:size(keypoint_match,2)
         x1 = keypoint_match(1,point);
         y1 = keypoint_match(2,point);
         x2 = keypoint_match(3,point);
         y2 = keypoint_match(4,point);
+        %filter out matches that are far away
+        distance = sqrt( (x1-x2)^2 + (y1-y2)^2);
+        if distance>threshold
+            continue
+        end
         %if it's the first pair
         if i == 1
             point_view_generated(1, size(point_view_generated,2)+1) = x1;

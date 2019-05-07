@@ -77,7 +77,7 @@ function [overall_points] = structure_from_motion(pv_matrix, block_size)
     
     % Remove all points that are not defined
     overall_points = overall_points(overall_def_idx,:);
-
+    
     % Plot result
     figure(1);
     scatter3(overall_points(:,1),...
