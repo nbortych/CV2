@@ -1,30 +1,40 @@
-% read in point_view_matrix
-point_view_matrix = dlmread('PointViewMatrix.txt');
-% Number of rows 
-size(point_view_matrix);
+
 addpath('./RANSAC')
 point_view_generated = [];
-threshold = 1.3;
-tol =  0.000000000000001; % A very small value.
+distance_check = true;
+ransac_inliers = false;
+ransac_improvement = false;
+distance_threshold = 1;
+tol =  0.0000000000001; % A very small value.
 %for each pair of matches
-
-for i=1:size(keypoint_matches)
+ransac_threshold_inliers= 0.001;
+ransac_threshold_improvement= 0.00000001;
+for i=1:size(keypoint_matches, 1)
+   
    %load the match
    keypoint_match = cell2mat(keypoint_matches(i));
-   %[matches, T1, T2] = normalize_points(keypoint_match);
-   %[F , inliers] = fundamentalMatrixRANSACinliers(matches, 0.00001);
-   %keypoint_match = keypoint_match(:, inliers);
+   if ransac_improvement
+      [matches, T1, T2] = normalize_points(keypoint_match);
+      F = fundamentalMatrixRANSAC(matches, ransac_threshold_improvement);
+   end
+   if ransac_inliers
+        inliers = allInliers(matches, ransac_threshold_inliers);
+        keypoint_match = keypoint_match(:, inliers);
+   end
    
    %for each match
    for point=1:size(keypoint_match,2)
+        
         x1 = keypoint_match(1,point);
         y1 = keypoint_match(2,point);
         x2 = keypoint_match(3,point);
         y2 = keypoint_match(4,point);
         %filter out matches that are far away
-        distance = sqrt( (x1-x2)^2 + (y1-y2)^2);
-        if distance>threshold
-            continue
+        if distance_check
+            distance = sqrt( (x1-x2)^2 + (y1-y2)^2);
+            if distance>distance_threshold
+                continue
+            end
         end
         %if it's the first pair
         if i == 1
@@ -32,8 +42,8 @@ for i=1:size(keypoint_matches)
             point_view_generated(2, size(point_view_generated,2)) = y1;
             point_view_generated(3, size(point_view_generated,2)) = x2;
             point_view_generated(4, size(point_view_generated,2)) = y2;
-        %elseif i== size(keypoint_match,2)
-          
+        
+            
         else
         %check if the point in the first image is the same as in the
         %previous match pair
@@ -58,5 +68,23 @@ for i=1:size(keypoint_matches)
             end
         end
 
+   end
+    if ransac_improvement
+        for point=1:size(point_view_generated,2)
+          x1 = point_view_generated(2*i-1,point);
+          y1 = point_view_generated(2*i,point);
+          x2 = point_view_generated(2*i+1,point);
+          y2 = point_view_generated(2*i+2,point);
+          
+          if x2 == 0
+              key1 = [x1; y1; 1];
+              key2 = [x2; y2; 1];
+              transformed = F * key1;
+              point_view_generated(2*i+1,point) = transformed(1);
+              point_view_generated(2*i+2,point) = transformed(2);
+              
+              
+          end
+        end
     end
 end
