@@ -1,23 +1,25 @@
-
 addpath('./RANSAC')
 point_view_generated = [];
-distance_check = false;
-ransac_inliers = false;
+distance_check = true;
+ransac_inliers = true;
 ransac_improvement = false;
-distance_threshold = 2;
-tol =  0.1; % A very small value.
+distance_threshold = 1;
+tol =  0.00000000000001; % A very small value.
 %for each pair of matches
-ransac_threshold_inliers= 0.01;
-ransac_threshold_improvement= 0.001;
+ransac_threshold_inliers= 1;
+ransac_threshold_improvement= 0.00000001;
 for i=1:size(keypoint_matches, 1)
    
    %load the match
    keypoint_match = cell2mat(keypoint_matches(i));
    if ransac_improvement
-      [matches, T1, T2] = normalize_points(keypoint_match);
-      F = fundamentalMatrixRANSAC(matches, ransac_threshold_improvement);
+      %generate transformation matrix
+      transform = improvement_ransac(matches, 0);
+      m = [transform(1) transform(2); transform(3) transform(4)];
+      t = [transform(5), transform(6)]';
    end
    if ransac_inliers
+        %find inliers theough ransac
         inliers = allInliers(matches, ransac_threshold_inliers);
         keypoint_match = keypoint_match(:, inliers);
    end
@@ -77,9 +79,9 @@ for i=1:size(keypoint_matches, 1)
           y2 = point_view_generated(2*i+2,point);
           
           if x2 == 0
-              key1 = [x1; y1; 1];
-              key2 = [x2; y2; 1];
-              transformed = F * key1;
+              key1 = [x1; y1];
+              key2 = [x2; y2];
+              transformed = (m * key1) + t;
               point_view_generated(2*i+1,point) = transformed(1);
               point_view_generated(2*i+2,point) = transformed(2);
               

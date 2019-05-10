@@ -1,23 +1,26 @@
-
 addpath('./RANSAC')
 point_view_generated = [];
 distance_check = true;
-ransac_inliers = false;
+ransac_inliers = true;
 ransac_improvement = false;
 distance_threshold = 1;
-tol =  0.0000000000001; % A very small value.
+tol =  0.00000000000001; % A very small value.
 %for each pair of matches
-ransac_threshold_inliers= 0.001;
+ransac_threshold_inliers= 1;
+row_tol = 10;
 ransac_threshold_improvement= 0.00000001;
 for i=1:size(keypoint_matches, 1)
    
    %load the match
    keypoint_match = cell2mat(keypoint_matches(i));
    if ransac_improvement
-      [matches, T1, T2] = normalize_points(keypoint_match);
-      F = fundamentalMatrixRANSAC(matches, ransac_threshold_improvement);
+      %generate transformation matrix
+      transform = improvement_ransac(matches, 0);
+      m = [transform(1) transform(2); transform(3) transform(4)];
+      t = [transform(5), transform(6)]';
    end
    if ransac_inliers
+        %find inliers theough ransac
         inliers = allInliers(matches, ransac_threshold_inliers);
         keypoint_match = keypoint_match(:, inliers);
    end
@@ -70,16 +73,19 @@ for i=1:size(keypoint_matches, 1)
 
    end
     if ransac_improvement
+        %for each point pair
         for point=1:size(point_view_generated,2)
           x1 = point_view_generated(2*i-1,point);
           y1 = point_view_generated(2*i,point);
           x2 = point_view_generated(2*i+1,point);
           y2 = point_view_generated(2*i+2,point);
-          
+          %if second row is empty
           if x2 == 0
-              key1 = [x1; y1; 1];
-              key2 = [x2; y2; 1];
-              transformed = F * key1;
+              
+              key1 = [x1; y1];
+              %transform
+              transformed = (m * key1) + t;
+              %add to matrix
               point_view_generated(2*i+1,point) = transformed(1);
               point_view_generated(2*i+2,point) = transformed(2);
               
@@ -88,3 +94,14 @@ for i=1:size(keypoint_matches, 1)
         end
     end
 end
+
+
+%filtering out rows
+keep_columns = false(1,size(point_view_generated,2));
+binary = point_view_generated>0;
+for j = 1:size(point_view_generated,2)
+    if sum(binary_pvm(:,j)) > row_tol
+        keep_columns(j) = true;
+    end
+end
+point_view_generated = point_view_generated(: ,keep_columns);
