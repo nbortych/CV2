@@ -1,27 +1,26 @@
 addpath('./RANSAC')
 point_view_generated = [];
 distance_check = true;
-ransac_inliers = true;
+ransac_inliers = false;
 ransac_improvement = false;
-distance_threshold = 1;
+distance_threshold = 1.6;
 tol =  0.00000000000001; % A very small value.
 %for each pair of matches
 ransac_threshold_inliers= 1;
-row_tol = 10;
-ransac_threshold_improvement= 0.00000001;
+row_tol = 15;
 for i=1:size(keypoint_matches, 1)
    
    %load the match
    keypoint_match = cell2mat(keypoint_matches(i));
    if ransac_improvement
       %generate transformation matrix
-      transform = improvement_ransac(matches, 0);
+      transform = improvement_ransac(keypoint_match, 0);
       m = [transform(1) transform(2); transform(3) transform(4)];
       t = [transform(5), transform(6)]';
    end
    if ransac_inliers
         %find inliers theough ransac
-        inliers = allInliers(matches, ransac_threshold_inliers);
+        inliers = allInliers(keypoint_match, ransac_threshold_inliers);
         keypoint_match = keypoint_match(:, inliers);
    end
    
@@ -100,8 +99,18 @@ end
 keep_columns = false(1,size(point_view_generated,2));
 binary = point_view_generated>0;
 for j = 1:size(point_view_generated,2)
-    if sum(binary_pvm(:,j)) > row_tol
+    if sum(binary(:,j)) > row_tol
         keep_columns(j) = true;
     end
 end
 point_view_generated = point_view_generated(: ,keep_columns);
+
+
+%generate binary map
+%creating a binary pvm matrix
+pvm = point_view_generated;
+binary = pvm>0;
+binary(2:2:end,:) = [];
+[r, c] = size(binary);                          
+imagesc((1:c)+0.5, (1:r)+0.5, binary); 
+colormap(gray);                             

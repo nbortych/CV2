@@ -3,10 +3,11 @@ point_view_generated = [];
 distance_check = true;
 ransac_inliers = true;
 ransac_improvement = false;
-distance_threshold = 1;
+distance_threshold = 0.5;
 tol =  0.00000000000001; % A very small value.
 %for each pair of matches
 ransac_threshold_inliers= 1;
+row_tol = 10;
 ransac_threshold_improvement= 0.00000001;
 for i=1:size(keypoint_matches, 1)
    
@@ -72,16 +73,19 @@ for i=1:size(keypoint_matches, 1)
 
    end
     if ransac_improvement
+        %for each point pair
         for point=1:size(point_view_generated,2)
           x1 = point_view_generated(2*i-1,point);
           y1 = point_view_generated(2*i,point);
           x2 = point_view_generated(2*i+1,point);
           y2 = point_view_generated(2*i+2,point);
-          
+          %if second row is empty
           if x2 == 0
+              
               key1 = [x1; y1];
-              key2 = [x2; y2];
+              %transform
               transformed = (m * key1) + t;
+              %add to matrix
               point_view_generated(2*i+1,point) = transformed(1);
               point_view_generated(2*i+2,point) = transformed(2);
               
@@ -90,3 +94,14 @@ for i=1:size(keypoint_matches, 1)
         end
     end
 end
+
+
+%filtering out rows
+keep_columns = false(1,size(point_view_generated,2));
+binary = point_view_generated>0;
+for j = 1:size(point_view_generated,2)
+    if sum(binary_pvm(:,j)) > row_tol
+        keep_columns(j) = true;
+    end
+end
+point_view_generated = point_view_generated(: ,keep_columns);
