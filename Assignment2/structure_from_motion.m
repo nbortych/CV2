@@ -41,6 +41,15 @@ function [overall_points] = structure_from_motion(pv_matrix, block_size)
             % In case no points collected so far 
             if sum(overall_def_idx)==0
                 overall_points(def_idx,:) = S';
+                
+                % Plot result of first step
+                figure(i);
+                scatter3(overall_points(:,1),...
+                         overall_points(:,2),...
+                         overall_points(:,3),...
+                         'MarkerEdgeColor','k',...
+                         'MarkerFaceColor','g');
+                 view(-30,10);
 
             % Otherwise:
             % Stitch current point set to main view using point correspondence
@@ -71,7 +80,19 @@ function [overall_points] = structure_from_motion(pv_matrix, block_size)
                 % Add new points transformed to main view to overall_points
                 new_points_transformed = S_transformed(new_idx,:);
                 overall_points(def_idx & ~overall_def_idx,:) = new_points_transformed;
+                
+                % Plot intermediate result for i=2,3
+                if i==2 || i==3
+                    figure(i);
+                    scatter3(new_points_transformed(:,1),...
+                             new_points_transformed(:,2),...
+                             new_points_transformed(:,3),...
+                             'MarkerEdgeColor','k',...
+                             'MarkerFaceColor','g');
+                     view(-30,10);
+                end
             end 
+            
         end
     end
     
@@ -79,7 +100,7 @@ function [overall_points] = structure_from_motion(pv_matrix, block_size)
     overall_points = overall_points(overall_def_idx,:);
     
     % Plot result
-    figure(1);
+    figure(100);
     scatter3(overall_points(:,1),...
              overall_points(:,2),...
              overall_points(:,3),...
