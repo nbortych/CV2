@@ -3,7 +3,7 @@ import numpy as np
 import trimesh
 import h5py
 from data_def import Mesh
-from mesh_to_png import triangles, mean_tex
+from mesh_to_png import triangles, mean_tex, mesh_to_png
 
 def U(i=1):
     """ 
@@ -12,7 +12,7 @@ def U(i=1):
     i=3 gives very expressive faces of various shape.
     ...
     """
-    return np.random.uniform(-3, 3)
+    return np.random.uniform(-i, i)
 
 def read_pca_model(num_pc_id=30, num_pc_ex=20):
     bfm = h5py.File("model2017-1_face12_nomouth.h5", 'r')
@@ -39,15 +39,24 @@ def sample_face(p, alpha, delta):
     return G_id+G_ex
 
 
-# read pca model from files
-pca_model = read_pca_model()
 
-# sample new face with given formula
-alpha = U(i=2)
-delta = U(i=2)
-f_pc = sample_face(pca_model, alpha, delta).reshape((-1, 3)) # (3N, )= (85764,)
+def sample_face_pointclouds(num_samples=100):
+    # read pca model from files
+    pca_model = read_pca_model()
 
-mesh = trimesh.base.Trimesh(vertices=f_pc, 
-                            faces=triangles, 
-                            vertex_colors=mean_tex)
-mesh.show()
+    for i in range(num_samples):
+        # sample new face with given formula
+        alpha = U(i=1)
+        delta = U(i=1)
+        f_pc = sample_face(pca_model, alpha, delta).reshape((-1, 3)) # (3N, )= (85764,)
+        
+        # show mesh:
+        # mesh = trimesh.base.Trimesh(vertices=f_pc, faces=triangles, vertex_colors=mean_tex)
+        # mesh.show()
+        
+        # save mesh
+        mesh = Mesh(vertices=f_pc, colors=mean_tex, triangles=triangles)
+        mesh_to_png(f"./res_morphable_model/{str(i)}.png", mesh)
+        
+        
+sample_face_pointclouds()
