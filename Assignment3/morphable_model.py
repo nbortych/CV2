@@ -38,9 +38,7 @@ def sample_face(p, alpha, delta):
     G_ex = p["mu_ex"] + p["E_ex"] @ ( p["sigma_ex"] * delta)
     return G_id+G_ex
 
-
-
-def sample_face_pointclouds(num_samples=100):
+def sample_face_pointclouds(num_samples=24):
     # read pca model from files
     pca_model = read_pca_model()
 
@@ -57,6 +55,5 @@ def sample_face_pointclouds(num_samples=100):
         # save mesh
         mesh = Mesh(vertices=f_pc, colors=mean_tex, triangles=triangles)
         mesh_to_png(f"./res_morphable_model/{str(i)}.png", mesh)
-        
         
 sample_face_pointclouds()
