@@ -54,6 +54,6 @@ def sample_face_pointclouds(num_samples=24):
         
         # save mesh
         mesh = Mesh(vertices=f_pc, colors=mean_tex, triangles=triangles)
-        mesh_to_png(f"./res_morphable_model/{str(i)}.png", mesh)
+        mesh_to_png(f"./results/morphable_model/{str(i)}.png", mesh)
         
 sample_face_pointclouds()
