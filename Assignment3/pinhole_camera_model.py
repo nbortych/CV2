@@ -5,15 +5,40 @@ from perspective_projection_matrix import get_perspective, get_P
 from morphable_model import sample_face, read_pca_model, U
 from rotation_matrix import get_rotation_matrix
 
+from data_def import Mesh
+from mesh_to_png import triangles, mean_tex, mesh_to_png
 
-def pinhole_camera_model(alpha, delta, w, t):
+def rotate_face(angles):
+    """
+    :param angles: list of angles. each angle has three entries [theta_x, theta_y, theta_z]
+    :return:
+    """
+    # sample face
     pca = read_pca_model()
-    G = sample_face(pca, alpha, delta)
+    G = sample_face(pca).T
 
-    matrix = np.array([[G[0]],
-                        [G[1]],
-                        [G[2]],
-                        [1]])
+    # transform to homogeneous coordinates
+    G_h = np.append(G, np.ones(G.shape[1]).reshape((1, -1)), axis=0)
+
+    for w in angles:
+        # get rotation matrix
+        T = np.eye(4)
+        T[:3, :3] = get_rotation_matrix(w)
+
+        # save resulting rotated face
+        mesh = Mesh(vertices=(T @ G_h)[:3].T, colors=mean_tex, triangles=triangles)
+        mesh_to_png("./results/rotation/"+str(w)+".png", mesh)
+
+    return
+
+def pinhole_camera_model(w, t):
+
+    # sample face
+    pca = read_pca_model()
+    G = sample_face(pca).T
+
+    # transform to homogeneous coordinates
+    G_h = np.append(G, np.ones(G.shape[1]).reshape((1, -1)), axis=0)
 
     W = 255
     H = 255
@@ -30,19 +55,11 @@ def pinhole_camera_model(alpha, delta, w, t):
 
     PI = np.dot(V, P)
 
-    R = get_rotation_matrix(w)
+    return
 
-    T = np.array([[R[0][0], R[0][1], R[0][2], t[0]],
-        [R[1][0], R[1][1], R[1][2], t[1]],
-        [R[2][0], R[2][1], R[2][2], t[2]],
-        [0, 0, 0, 1]])
 
-    result = np.dot(PI, np.dot(T, matrix))
+# Task 3.1
+# Result are saved in results/rotation
+w = [[0,10,0], [0,0,0], [0,-10,0]]
+rotate_face(w)
 
-    print(result)
-
-alpha = U(i=1)
-delta = U(i=1)
-w = [10, 10, 10]
-t = [0, 0, 0]
-pinhole_camera_model(alpha, delta, w, t)
