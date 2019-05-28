@@ -1,8 +1,5 @@
 import os
-<<<<<<< Updated upstream
 from skimage.io import imsave
-=======
->>>>>>> Stashed changes
 import numpy as np
 import trimesh
 import pyrender
@@ -18,17 +15,12 @@ mean_tex = np.asarray(bfm['color/model/mean'], dtype=np.float32).reshape((-1, 3)
 
 triangles = np.asarray(bfm['shape/representer/cells'], dtype=np.int32).T
 
-<<<<<<< Updated upstream
 def mesh_to_png(file_name, mesh, width=640, height=480, z_camera_translation=400):
-=======
-def mesh_to_png(file_name, mesh):
->>>>>>> Stashed changes
     mesh = trimesh.base.Trimesh(
         vertices=mesh.vertices,
         faces=mesh.triangles,
         vertex_colors=mesh.colors)
 
-<<<<<<< Updated upstream
     mesh = pyrender.Mesh.from_trimesh(mesh, smooth=True, wireframe=False)
 
     # compose scene
@@ -56,12 +48,3 @@ if __name__ == '__main__':
     mesh = Mesh(mean_shape, mean_tex, triangles)
     mesh_to_png("debug.png", mesh)
     mesh_to_png("debug1234.png", mesh)
-=======
-    png = mesh.scene().save_image()
-    with open(file_name, 'wb') as f:
-        f.write(png)
-
-if __name__ == '__main__':
-    mesh = Mesh(mean_shape, mean_tex, triangles)
-    mesh_to_png("debug.png", mesh)
->>>>>>> Stashed changes
