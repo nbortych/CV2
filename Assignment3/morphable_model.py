@@ -5,14 +5,8 @@ import h5py
 from data_def import Mesh
 from mesh_to_png import triangles, mean_tex, mesh_to_png
 
-def U(i=1):
-    """ 
-    Note: The higher you choose i, the further away the sampled face is from the mediocre face.
-    i=1 gives almost always the same face.
-    i=3 gives very expressive faces of various shape.
-    ...
-    """
-    return np.random.uniform(-i, i)
+def U(size):
+    return np.random.uniform(-1, 1, size=size)
 
 def read_pca_model(num_pc_id=30, num_pc_ex=20):
     bfm = h5py.File("model2017-1_face12_nomouth.h5", 'r')
@@ -30,30 +24,41 @@ def read_pca_model(num_pc_id=30, num_pc_ex=20):
     return {"mu_id": mu_id, "sigma_id": sigma_id, "E_id": E_id,
             "mu_ex": mu_ex, "sigma_ex": sigma_ex, "E_ex": E_ex}
 
-def sample_face(p, alpha, delta):
+def get_face_point_cloud(p, alpha, delta):
     """
-    p : PCA model received with read_pca_model()
+    Get face point cloud for given alpha and delta.
+
+    :param p: PCA model received with read_pca_model()
+    :param alpha: size 30
+    :param delta: size 20
+    :return: 3D point cloud of size [num_points x 3]
     """
     G_id = p["mu_id"] + p["E_id"] @ ( p["sigma_id"] * alpha)
     G_ex = p["mu_ex"] + p["E_ex"] @ ( p["sigma_ex"] * delta)
-    return G_id+G_ex
+    return (G_id+G_ex).reshape((-1, 3))
 
-def sample_face_pointclouds(num_samples=24):
+def random_face_point_cloud(p):
+    """
+    Sample random new face point cloud.
+    :param p:
+    :return:
+    """
+    return get_face_point_cloud(p, U(30), U(20))
+
+def generate_face_images(num_samples=24):
     # read pca model from files
     pca_model = read_pca_model()
 
     for i in range(num_samples):
         # sample new face with given formula
-        alpha = U(i=1)
-        delta = U(i=1)
-        f_pc = sample_face(pca_model, alpha, delta).reshape((-1, 3)) # (3N, )= (85764,)
-        
+        f_pc = random_face_point_cloud(pca_model) # (3N, )= (85764,)
+
         # show mesh:
         # mesh = trimesh.base.Trimesh(vertices=f_pc, faces=triangles, vertex_colors=mean_tex)
         # mesh.show()
-        
+
         # save mesh
         mesh = Mesh(vertices=f_pc, colors=mean_tex, triangles=triangles)
         mesh_to_png(f"./results/morphable_model/{str(i)}.png", mesh)
-        
-sample_face_pointclouds()
+
+    return
