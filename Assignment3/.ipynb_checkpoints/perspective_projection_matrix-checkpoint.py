@@ -19,9 +19,6 @@ def get_P(near, far, right, left, top, bottom):
     x5 = -(far + near)/(far - near)
     x6 = -(2 * far * near)/(far - near)
     x7 = -1
-    
-    
-
 
     P = np.array([[x1, 0, x2, 0],
         [0, x3, x4, 0],
