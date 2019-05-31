@@ -1,5 +1,15 @@
+
 import torch 
 import numpy as np
+import matplotlib.pyplot as plt
+from collections import namedtuple
+from PIL import Image, ImageSequence
+import dlib
+
+from viewport_matrix import get_V
+from perspective_projection_matrix import get_perspective, get_P
+from morphable_model import get_face_point_cloud, read_pca_model, U, random_face_point_cloud
+import matplotlib.pyplot as plt
 
 def rotation_matrix(w, is_numpy=False):
     if is_numpy:
@@ -23,7 +33,6 @@ def rotation_matrix(w, is_numpy=False):
     r_z = torch.stack([cosz, -sinz, zero,
                         sinz,  cosz, zero,
                         zero, zero,  one]).view( 3, 3)
-
     
     R = r_x @ r_y @ r_z
     
@@ -123,16 +132,16 @@ def facial_landmarks_torch(alpha, delta, w, t):
 
     image_aspect_ratio = W / H
     angle = 10
-    near = 300
-    far = 2000
+    near = .1
+    far = 10
 
     right, left, top, bottom = get_perspective(image_aspect_ratio, angle, near, far)
     
     V = get_V(right, left, top, bottom)
 
-    P = get_P(near, far, right, left, top, bottom)
-    [V, P] = list(map(torch.from_numpy, [V, P]))
-    V,P = V.to(dtype = torch.float32), P.to(dtype = torch.float32)
+    
+    [V] = list(map(torch.from_numpy, [V]))
+    V = V.to(dtype = torch.float32)
     n,f, t, b = near, far, top, bottom
     P = torch.Tensor([[(2 * n) / (t-b), 0, 0, 0],
                 [0, (2 * n) / (t - b), 0, 0],
