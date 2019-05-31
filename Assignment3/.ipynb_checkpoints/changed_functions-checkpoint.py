@@ -1,6 +1,7 @@
 import torch 
 import numpy as np
-def rotation_matrix(w, is_numpy=True):
+
+def rotation_matrix(w, is_numpy=False):
     if is_numpy:
         w = torch.from_numpy(w)
 
@@ -30,7 +31,7 @@ def rotation_matrix(w, is_numpy=True):
         R = R.numpy()
     return R
     
-def get_P(n, f, t, b, is_numpy = True):
+def get_P(n, f, t, b, is_numpy = False):
     if is_numpy:
         return np.array([[(2 * n) / (t-b), 0, 0, 0],
                 [0, (2 * n) / (t - b), 0, 0],
@@ -64,7 +65,7 @@ def normalise(landmarks, is_ground = False, values =None):
 
 
 
-def denormalise(estimated_landmarks, target_landmarks, is_numpy = True):
+def denormalise(estimated_landmarks, target_landmarks, is_numpy = False):
     if is_numpy:
         estimated_landmarks, target_landmarks = torch.from_numpy(estimated_landmarks) ,  torch.form_numpy(target_landmarks)
     landmarks, values = normalise(target_landmarks, is_ground = True)
@@ -74,4 +75,80 @@ def denormalise(estimated_landmarks, target_landmarks, is_numpy = True):
     estimated_landmarks[:,1] = estimated_landmarks[:,1]*values[0]+values[2]
     estimated_landmarks = estimated_landmarks.detach().numpy()
     
+    return estimated_landmarks
+
+
+def get_face_point_cloud_torch(p, alpha, delta): 
+    """
+    Get face point cloud for given alpha and delta.
+
+    :param p: PCA model received with read_pca_model()
+    :param alpha: size 30
+    :param delta: size 20
+    :return: 3D point cloud of size [num_points x 3]
+    """
+    G_id = torch.from_numpy(p["mu_id"]) + torch.from_numpy(p["E_id"]) @ ( torch.from_numpy(p["sigma_id"]) * alpha)
+    G_ex = torch.from_numpy(p["mu_ex"]) + torch.from_numpy(p["E_ex"]) @ ( torch.from_numpy(p["sigma_ex"]) * delta)
+    return (G_id+G_ex).view((-1, 3))
+
+
+
+
+
+def facial_landmarks_torch(alpha, delta, w, t):
+    """
+    Construct facial landmarks from facial geometry latent parameters alpha, delta and object transformation w, t.
+
+    :param alpha: array, 30dim
+    :param delta: array, 20dim
+    :param w: rotation angles around x,y, z. Given as list [theta_x, theta_y, theta_z].
+    :param t: translation in x,y,z space. Given as list [translation_x, translation_y, translation_z]
+    :return:
+    """
+    landmarks_idx = np.loadtxt("Landmarks68_model2017-1_face12_nomouth.anl", dtype=int)
+
+    pca = read_pca_model()
+    G = get_face_point_cloud_torch(pca, alpha, delta)[landmarks_idx].t()
+    G_h = [G , torch.ones(G.shape[1]).view((1, -1))]
+    G_h = torch.cat(G_h, dim=0)
+    
+    # get T matrix
+    T = torch.eye(4)
+    T[:3, :3] = rotation_matrix(w)#rotation_tensor(w, 1)#get_rotation_matrix_torch(w)  #torch.tensor([[1, 0, 0], [0, 1, 0], [0, 0, 1]])#
+    T[:3, 3] = t
+    
+    # Get V and P matrices
+    W = 172
+    H = 162
+
+    image_aspect_ratio = W / H
+    angle = 10
+    near = 300
+    far = 2000
+
+    right, left, top, bottom = get_perspective(image_aspect_ratio, angle, near, far)
+    
+    V = get_V(right, left, top, bottom)
+
+    P = get_P(near, far, right, left, top, bottom)
+    [V, P] = list(map(torch.from_numpy, [V, P]))
+    V,P = V.to(dtype = torch.float32), P.to(dtype = torch.float32)
+    n,f, t, b = near, far, top, bottom
+    P = torch.Tensor([[(2 * n) / (t-b), 0, 0, 0],
+                [0, (2 * n) / (t - b), 0, 0],
+              [0, 0, -(f + n) / (f - n), -(2 * f * n) / (f - n)],
+              [0, 0, -1, 0]])
+    i =  V @ P @ T @ G_h
+
+    # homo to cartesian
+    i = i/i[3,:].clone()
+
+    # two-dimensional
+    return i[:2, :].t()
+
+
+
+def get_final_landmarks(alpha, delta, w, t, target_landmarks):
+    estimated_landmarks = facial_landmarks_torch(alpha, delta, w, t)
+    estimated_landmarks = denormalise(estimated_landmarks, target_landmarks)
     return estimated_landmarks
