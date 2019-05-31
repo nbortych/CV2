@@ -102,8 +102,6 @@ def get_face_point_cloud_torch(p, alpha, delta):
 
 
 
-
-
 def facial_landmarks_torch(alpha, delta, w, t):
     """
     Construct facial landmarks from facial geometry latent parameters alpha, delta and object transformation w, t.
