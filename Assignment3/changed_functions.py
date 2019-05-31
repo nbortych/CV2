@@ -1,5 +1,5 @@
 import torch 
-
+import numpy as np
 def rotation_matrix(w, is_numpy=True):
     if is_numpy:
         w = torch.from_numpy(w)
