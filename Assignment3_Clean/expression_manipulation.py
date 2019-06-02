@@ -8,27 +8,19 @@ from morphable_model import get_face_point_cloud
 source_image = Image.open('./images/expression.gif')
 target = Image.open('./images/first_frame.png')
 
-frames = []
-for frame in ImageSequence.Iterator(source_image):
+
+target_model = optimization_one_image(300, # Can be changed to multiple images
+                                target,
+                                lambda_alpha=45,
+                                lambda_delta=15,
+                                lr=.128)
+alpha = target_model.alpha
+
+for i, frame in enumerate(ImageSequence.Iterator(source_image)):
     frame = frame.convert('RGB')
-    frames.append(frame)
-
-alpha_model = optimization_one_image(300, # Can be changed to multiple images
-                                frames[2],
-                                lambda_alpha=45,
-                                lambda_delta=15,
-                                lr=.128)
-alpha = alpha_model.alpha
-
-deltas = []
-Rs = []
-ts = []
-for frame in frames:
-    model = optimization_one_image(50,
+    model = optimization_one_image(300,
                                 frame,
-                                lambda_alpha=45,
-                                lambda_delta=15,
                                 lr=.128)
-    deltas.append(model.delta)
-    Rs.append(model.R)
-    ts.append(model.t)
+    points = get_face_point_cloud(model.p, alpha, model.delta).view((-1, 3))
+    mesh = Mesh(vertices=points.detach().numpy(), colors=mean_tex, triangles=triangles)
+    mesh_to_png("./results/expression/frame_{}.png".format(i), mesh)
