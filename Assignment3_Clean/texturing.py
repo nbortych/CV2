@@ -11,19 +11,20 @@ from data_def import Mesh
 from mesh_to_png import triangles, mesh_to_png
 
 
-def texture(image, points_on_image):
+def texture(image_array, landmarks):
 
-    def point_on_image(image, point):
-        if 0 < point[0] < image.width-2 and 0 < point[1] < image.height-2:
+    image_height, image_width, _ = image_array.shape
+
+    def landmark_on_image(p):
+        if 0 < p[0] < image_width-2 and 0 < p[1] < image_height-2:
             return True
         return False
 
     tex = []
-    image_array = np.array(image)
 
-    for p in points_on_image:
+    for p in landmarks:
 
-        if point_on_image(image,p):
+        if landmark_on_image(p):
 
             # Following https://en.wikipedia.org/wiki/Bilinear_interpolation
 
@@ -76,13 +77,13 @@ def texturing():
     points_3d = get_face_point_cloud(pca, trained_model.alpha, trained_model.delta).view((-1, 3))# 28588, 3
     points_2d = trained_model.forward(only_lm=False).detach().numpy() # 28588, 2
 
-    plt.scatter(points_2d.T[0], points_2d.T[1])
+    #plt.scatter(points_2d.T[0], points_2d.T[1])
     plt.imshow(np.array(image))
     plt.axis('off')
     plt.show()
-
+    """
     # obtain texture from mask on image
-    tex = np.array(texture(image, points_2d))
+    tex = np.array(texture(np.array(image), points_2d))
 
     # look at 3D visualization
     # mesh = trimesh.base.Trimesh(vertices=points_3d.detach().numpy(),faces=triangles,vertex_colors=new_texture)
@@ -104,5 +105,6 @@ def texturing():
 
     #mesh = Mesh(vertices=, colors=tex, triangles=triangles)
     #mesh_to_png("./results/texturing.png", mesh)
-
+    """
     return
+

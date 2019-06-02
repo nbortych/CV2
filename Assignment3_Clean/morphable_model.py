@@ -18,8 +18,8 @@ def read_pca_model(num_pc_id=30, num_pc_ex=20):
 
     # facial expression 
     mu_ex = np.array(bfm['expression/model/mean']) # (3N)
-    sigma_ex = np.sqrt(np.array(bfm['shape/model/pcaVariance']))[:num_pc_ex] # (100,)
-    E_ex = np.array(bfm['shape/model/pcaBasis'])[:,:num_pc_ex] # (3N, 100)
+    sigma_ex = np.sqrt(np.array(bfm['expression/model/pcaVariance']))[:num_pc_ex] # (100,)
+    E_ex = np.array(bfm['expression/model/pcaBasis'])[:,:num_pc_ex] # (3N, 100)
 
     return {"mu_id": mu_id, "sigma_id": sigma_id, "E_id": E_id,
             "mu_ex": mu_ex, "sigma_ex": sigma_ex, "E_ex": E_ex}
@@ -60,6 +60,6 @@ def generate_face_images(num_samples=24):
 
         # save mesh
         mesh = Mesh(vertices=f_pc, colors=mean_tex, triangles=triangles)
-        mesh_to_png(f"./results/morphable_model/{str(i)}.png", mesh)
+        mesh_to_png(f"./results/morphable_model/{str(i)}.png", mesh, width=400,z_camera_translation=280)
 
     return

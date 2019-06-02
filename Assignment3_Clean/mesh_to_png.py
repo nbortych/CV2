@@ -15,7 +15,7 @@ mean_tex = np.asarray(bfm['color/model/mean'], dtype=np.float32).reshape((-1, 3)
 
 triangles = np.asarray(bfm['shape/representer/cells'], dtype=np.int32).T
 
-def mesh_to_png(file_name, mesh, width=640, height=480, z_camera_translation=400):
+def mesh_to_png(file_name, mesh, width=480, height=480, z_camera_translation=250):
     mesh = trimesh.base.Trimesh(
         vertices=mesh.vertices,
         faces=mesh.triangles,
